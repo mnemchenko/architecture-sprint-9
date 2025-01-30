@@ -1,0 +1,57 @@
+@startuml "Online Deposit Container"
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+!define DEVICONS https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.1/sprites
+!include DEVICONS/dotnet.puml
+!include DEVICONS/kafka.puml
+!include DEVICONS/react.puml
+
+AddElementTag("microService", $shape=EightSidedShape(), $bgColor="CornflowerBlue", $fontColor="white", $legendText="micro service\neight sided")
+AddElementTag("storage", $shape=RoundedBoxShape(), $bgColor="lightSkyBlue", $fontColor="white")
+
+title Container Diagram for Online Deposit
+
+Person(user, "Client", "")
+
+Person(frontOfficeManager, "Front Office Manager", "")
+
+Person(depositBackOfficeManager, "Deposit Back Office Manager", "")
+
+Person(creditBackOfficeManager, "Credit Back Office Manager", "")
+
+System_Boundary(c1, "Online Bank") {
+    Container(onlineBankUserBrowser, "User Browser", "")
+    Container(onlineBankBackend, "Online Bank", ".NET 4.5", "", $tags="microService", $sprite="dotnet")
+    ContainerDb(onlineBankDb, "Online Bank Database", "MS SQL", "Stores Online Bank data", $tags = "storage")
+    Container(onlineBankAcl, "Anti-Corruption Layer", ".NET 8", $tags="microService", $sprite="dotnet")
+}
+
+System_Boundary(c2, "Automated Bank System") {
+    Container(absDesktopClient, "Desktop Client", "Delphi")
+    ContainerDb(absDb, "ABS Database", "Oracle", "", $tags="storage")
+    Container(absService, "ABS Service", ".NET 8", $tags="microService", $sprite="dotnet")
+}
+
+System_Boundary(c3, "Message Broker") {
+    Container(kafka, "Message Broker", "Apache Kafka", $sprite="kafka")
+}
+
+Rel(user, onlineBankUserBrowser, "Uses the system")
+Rel(onlineBankUserBrowser, onlineBankBackend, "Performs requests", "HTTPS")
+
+'Rel(otpService, messageBroker, "Pub OTP action events/Sub OTP tasks", "AMQP")
+Rel(onlineBankBackend, onlineBankDb, "Stores data in")
+
+Rel(frontOfficeManager, absDesktopClient, "Uses the system")
+Rel(depositBackOfficeManager, absDesktopClient, "Uses the system")
+Rel(creditBackOfficeManager, absDesktopClient, "Uses the system")
+Rel(absDesktopClient, absDb, "Stores data in")
+Rel(absService, absDb, "Reads/updates")
+
+Rel(onlineBankAcl, kafka, "Publish Online Deposit Order Created")
+Rel(onlineBankAcl, kafka, "Consumes Deposit Rates Updated")
+Rel(onlineBankAcl, onlineBankDb, "Reads/updates")
+Rel(absService, kafka, "Publishes ABS Order Created, Notification Created, Deposit Rates Updated")
+Rel(absService, kafka, "Consumes Online Deposit Order Created, Order Processed By Call Center")
+
+@enduml
