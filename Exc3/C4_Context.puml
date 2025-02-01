@@ -1,0 +1,49 @@
+@startuml "Online Deposit Context"
+title System Context diagram for Online Deposit
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(client, "Client", "")
+
+Person(operator, "Operator", "")
+
+Person(frontOfficeManager, "Front Office Manager", "")
+
+Person(depositBackOfficeManager, "Deposit Back Office Manager", "")
+
+Person(creditBackOfficeManager, "Credit Back Office Manager", "")
+
+System_Ext(smsGate, "SMS Gateway", "Provides API for sending SMS")
+
+System(site, "Site", "")
+
+System(onlineBank, "Online Bank", "")
+
+System(callCenterSystem, "Call Center System", "")
+
+System(abs, "Automated Bank System", "")
+
+System(notificationSystem, "Notification System", "")
+
+Rel(client, site, "Uses the system", "HTTPS")
+Rel(client, onlineBank, "Uses the system", "HTTPS")
+
+Rel(frontOfficeManager, abs, "Uses the system", "")
+Rel(depositBackOfficeManager, abs, "Uses the system", "")
+Rel(creditBackOfficeManager, abs, "Uses the system", "")
+
+Rel(operator, callCenterSystem, "Uses the system", "")
+
+Rel(abs, callCenterSystem, "ABS Deposit Order Created")
+Rel(callCenterSystem, abs, "Order Processed ByCall Center")
+
+Rel(site, abs, "Online Deposit Order Created", "")
+Rel(abs, site, "Deposit Rates Updated")
+Rel(onlineBank, abs, "Online Deposit Order Created", "")
+Rel(abs, onlineBank, "Deposit Rates Updated")
+
+Rel(abs, notificationSystem, "Notification Created")
+
+Rel(notificationSystem, smsGate, "Sends SMS", "HTTP")
+
+@enduml
